@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://d3korpfrgseif"]
+[gd_scene load_steps=11 format=3 uid="uid://d3korpfrgseif"]
 
 [ext_resource type="Script" path="res://scr/Grid.gd" id="1"]
 [ext_resource type="Texture2D" uid="uid://c28wciyag1k4p" path="res://spr/button.png" id="2"]
@@ -9,7 +9,6 @@
 [ext_resource type="Texture2D" uid="uid://0sifyyptxqvw" path="res://spr/nextPiece.png" id="8"]
 [ext_resource type="Texture2D" uid="uid://dsdhsn18wdlr6" path="res://spr/grid.png" id="9"]
 [ext_resource type="FontFile" path="res://fonts/UniFont.tres" id="10"]
-[ext_resource type="AudioStream" uid="uid://dtj161d601ncu" path="res://audio/Tetris.wav" id="11"]
 [ext_resource type="Texture2D" uid="uid://bqrfbg57op0jf" path="res://spr/russia.png" id="12"]
 
 [node name="Main" type="Node2D"]
@@ -78,6 +77,43 @@ offset_right = 26.0
 offset_bottom = 130.0
 scale = Vector2(4, 4)
 texture = ExtResource("8")
+
+[node name="HighScore" type="Control" parent="Grid/UI"]
+layout_mode = 1
+anchors_preset = 0
+offset_top = 35.0
+offset_right = 202.0
+offset_bottom = 75.0
+
+[node name="ScoreText" type="Label" parent="Grid/UI/HighScore"]
+layout_mode = 0
+offset_left = 11.1203
+offset_right = 65.1203
+offset_bottom = 38.0
+theme_override_fonts/font = ExtResource("10")
+theme_override_font_sizes/font_size = 11
+text = "HISCORE:"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScoreNumber" type="Label" parent="Grid/UI/HighScore"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 64.0
+offset_right = 147.0
+offset_bottom = 38.0
+theme_override_fonts/font = ExtResource("10")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="Grid/UI/HighScore"]
+show_behind_parent = true
+layout_mode = 0
+offset_right = 51.0
+offset_bottom = 12.0
+scale = Vector2(3, 3)
+texture = ExtResource("2")
+expand_mode = 1
 
 [node name="Score" type="Control" parent="Grid/UI"]
 anchors_preset = 0
@@ -182,13 +218,14 @@ vertical_alignment = 1
 show_behind_parent = true
 layout_mode = 0
 offset_left = -12.5654
-offset_top = -148.691
+offset_top = -163.0
 offset_right = 35.4346
-offset_bottom = -85.6908
+offset_bottom = -99.9998
 scale = Vector2(3, 3)
 texture = ExtResource("12")
 
 [node name="Background" type="ColorRect" parent="Grid/UI"]
+visible = false
 show_behind_parent = true
 layout_mode = 0
 offset_right = 600.0
@@ -214,9 +251,5 @@ centered = false
 [node name="LockTimer" type="Timer" parent="Grid"]
 wait_time = 0.5
 one_shot = true
-
-[node name="BackgroundMusic" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("11")
-autoplay = true
 
 [connection signal="timeout" from="Grid/LockTimer" to="Grid" method="_on_LockTimer_timeout"]

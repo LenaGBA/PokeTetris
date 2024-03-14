@@ -8,7 +8,7 @@ const spriteSize = 32
 var gridOffsetX
 var gridOffsetY
 
-const dasDelay = 8
+const dasDelay = 12
 const infinityValue = 15
 
 const Piece = preload("res://scr/Piece.gd")
@@ -27,19 +27,44 @@ var dasCounter = 0
 var lines = 0
 var level = 1
 var score = 0
+var high_score = 0
 var actions = 0
 var prevActions = 0
 var speed = 1
 var hasSwapped = false
 
+var hold_move_timer = 0
+const HOLD_MOVE_TIME = 0.01
+
 var currentBag
 var nextBag
-
+const SAVE_PATH = "user://tetris_save.save"
 const BORDER_OFFSET = 10
 enum Direction {CLOCKWISE, ANTICLOCKWISE}
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	_reset_game()
+
+func _check_high_score():
+	if score > high_score:
+		high_score = score
+	%ScoreNumber.text = str(high_score)
+		#print(high_score)
+
+func _save():
+	_check_high_score()
+	var file = FileAccess.open(SAVE_PATH,FileAccess.WRITE)
+	file.store_var(high_score)
+
+func _load():
+	var file = FileAccess.open(SAVE_PATH,FileAccess.READ)
+	high_score = file.get_var()
+
+func _reset_game():
+	_load()
+	_save()
+	score = 0
 	gridOffsetX = $UI/Border.position.x + BORDER_OFFSET
 	gridOffsetY = $UI/Border.position.y - (vanishZone-1)*spriteSize
 	grid = MatrixOperations.create2DMatrix(gridWidth, gridHeight, 0)
@@ -85,48 +110,59 @@ func addPiece():
 			if currentPiece.shape[x][y] != 0:
 				grid[currentPiece.positionInGrid.x+x][currentPiece.positionInGrid.y+y] = currentPiece.shape[x][y]
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _physics_process(delta):
+func _input(event: InputEvent) -> void:
 	var sthHappened = false
 	if Input.is_action_just_pressed("ui_exit"):
-		get_tree().quit()
-	if Input.is_action_just_pressed("ui_right"):
+		request_ready()
+	if event is InputEvent and event.is_action_pressed("right"):
 		if canPieceMoveRight():
 			movePieceInGrid(1,0)
 			sthHappened = true
 			actions += 1
 		deltaSum = 0
 		dasCounter = 0
-	if Input.is_action_just_pressed("ui_left"):
+	if event is InputEvent and event.is_action_pressed("left"):
 		if canPieceMoveLeft():
 			movePieceInGrid(-1,0)
 			sthHappened = true
 			actions += 1
 		deltaSum = 0
 		dasCounter = 0
-
+	if (sthHappened):
+		drawGrid()
+		drawDroppingPoint()
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta):
+	var sthHappened = false
 	deltaSum += delta
 	if (deltaSum > 2*delta) && (dasCounter>dasDelay):
-		if Input.is_action_pressed("ui_right"):
-			if canPieceMoveRight():
-				movePieceInGrid(1,0)
-				sthHappened = true
-				actions += 1
-		if Input.is_action_pressed("ui_left"):
-			if canPieceMoveLeft():
-				movePieceInGrid(-1,0)
-				sthHappened = true
-				actions += 1
+		if Input.is_action_pressed("right"):
+			hold_move_timer+= delta
+			while hold_move_timer > HOLD_MOVE_TIME:
+				hold_move_timer -= HOLD_MOVE_TIME
+				if canPieceMoveRight():
+					movePieceInGrid(1,0)
+					sthHappened = true
+					actions += 1
+		if Input.is_action_pressed("left"):
+			hold_move_timer+= delta
+			while hold_move_timer > HOLD_MOVE_TIME:
+				hold_move_timer -= HOLD_MOVE_TIME
+				if canPieceMoveLeft():
+					movePieceInGrid(-1,0)
+					sthHappened = true
+					actions += 1
 		deltaSum = 0
-	dasCounter+=1
-	if Input.is_action_pressed("ui_down"):
+	dasCounter+=delta * 100
+	if Input.is_action_pressed("down"):
 			if canPieceMoveDown():
 				movePieceInGrid(0,1)
 				score += 1
+				_check_high_score()
 				$UI/Score/ScoreNumber.text = str(score)
 				sthHappened = true
 			actions = 0
-	if Input.is_action_just_pressed("ui_up"):	
+	if Input.is_action_just_pressed("hard_drop"):
 		hardDropPiece()
 		afterDrop()
 		sthHappened = true
@@ -194,7 +230,7 @@ func afterDrop():
 	currentPiece = Piece.new()
 	checkAndClearFullLines()
 	if (checkGameOver()):
-		get_tree().quit()
+		_ready()
 	spawnFromBag()
 	hasSwapped = false
 
@@ -236,6 +272,7 @@ func hardDropPiece():
 		score += 2
 		$UI/Score/ScoreNumber.text = str(score)
 		movePieceInGrid(0,1)
+	_check_high_score()
 	var particle = DropParticle.instantiate()
 	particle.position.x = gridOffsetX + ((currentPiece.positionInGrid.x + currentPiece.shape.size()/float(2)))* spriteSize
 	var pixelPosy = (currentPiece.positionInGrid.y+1)* spriteSize
@@ -295,6 +332,7 @@ func checkAndClearFullLines():
 			3: newScore=500*level
 			4: newScore=800*level
 		score += newScore
+		_check_high_score()
 		lines += cleared
 		$UI/Score/ScoreNumber.text = str(score)
 		$UI/Lines/LinesNumber.text = str(lines)
