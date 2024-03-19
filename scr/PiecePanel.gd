@@ -3,7 +3,7 @@ class_name PiecePanel
  
 const Piece = preload("res://scr/Piece.gd")
 
-const spriteSize = 16
+const spriteSize = 32
 
 func drawPiece(piece: Piece, yOffset):
 	var shapeWithoutBorders = piece.getShapeWithoutBorders()
@@ -18,5 +18,6 @@ func drawPiece(piece: Piece, yOffset):
 				circle.position = Vector2(origin.x + spriteSize*i ,origin.y + spriteSize*j)
 				circle.centered = false
 				circle.texture = piece.getTextureForPiece()
+				circle.scale = Vector2(2,2)
 				add_child(circle)
 			

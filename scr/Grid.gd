@@ -1,4 +1,4 @@
-extends Node2D
+extends Control
 
 var grid = []
 const gridWidth = 10
@@ -50,7 +50,6 @@ func _check_high_score():
 	if score > high_score:
 		high_score = score
 	%ScoreNumber.text = str(high_score)
-		#print(high_score)
 
 func _save():
 	_check_high_score()
@@ -133,6 +132,8 @@ func _input(event: InputEvent) -> void:
 		drawDroppingPoint()
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	gridOffsetX = $UI/Border.position.x + BORDER_OFFSET
+	gridOffsetY = $UI/Border.position.y - (vanishZone-1)*spriteSize
 	var sthHappened = false
 	deltaSum += delta
 	if (deltaSum > 2*delta) && (dasCounter>dasDelay):
@@ -188,6 +189,9 @@ func _process(delta):
 			var particle = HoldParticle.instantiate()
 			particle.setDestination($UI/Hold.position + $UI/Hold.size/2)
 			particle.texture = currentPiece.getTextureForPiece()
+			particle.explosiveness = 1
+			particle.lifetime = 0.2
+			particle.amount = 100
 			add_child(particle)
 			particle.emit(Vector2(spriteSize*(currentPiece.positionInGrid.x + currentPiece.getShapeWithoutBorders().size()/2.0) + gridOffsetX ,spriteSize*(currentPiece.positionInGrid.y++ currentPiece.getShapeWithoutBorders()[0].size()/2.0) + gridOffsetY ))
 			
@@ -278,15 +282,17 @@ func hardDropPiece():
 	var pixelPosy = (currentPiece.positionInGrid.y+1)* spriteSize
 	particle.position.y = (pixelPosy)/2 + gridOffsetY
 	particle.setBoxRanges(Vector2(currentPiece.shape.size()/float(2)* spriteSize, pixelPosy/2 -spriteSize))
-	particle.amount = pixelPosy/20
+	particle.amount = pixelPosy/5
+	particle.lifetime = 0.5
+	particle.explosiveness = 1
 	match currentPiece.getColorIndex():
-		1: particle.setColor(Color.RED)
+		1: particle.setColor(Color.CYAN)
 		2: particle.setColor(Color.BLUE)
-		3: particle.setColor(Color.YELLOW)
-		4: particle.setColor(Color.CYAN)
-		5: particle.setColor(Color.GREEN)
-		6: particle.setColor(Color.FUCHSIA)
-		7: particle.setColor(Color.ORANGE)
+		3: particle.setColor(Color.ORANGE)
+		4: particle.setColor(Color.YELLOW)
+		5: particle.setColor(Color.FUCHSIA)
+		6: particle.setColor(Color.RED)
+		7: particle.setColor(Color.GREEN)
 	add_child(particle)
 	particle.emit()
 
